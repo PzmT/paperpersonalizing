@@ -1,0 +1,12 @@
+server:
+  port: 8888
+
+
+spring:
+  application:
+    name: business-server
+  datasource:
+    url: jdbc:mysql://localhost:3306/elm?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: name
+    password: pp
+    driver-class-name: com.mysql.cj.jdbc.Driver
