@@ -3,6 +3,7 @@ package com.example.paperpersonalizing.service;
 import com.example.paperpersonalizing.config.StorageConfig;
 import com.example.paperpersonalizing.entity.*;
 import com.example.paperpersonalizing.entity.papertreeComposite.Paper;
+import com.example.paperpersonalizing.entity.papertreeComposite.PaperAlerting;
 import com.example.paperpersonalizing.entity.papertreeComposite.PaperTree;
 import com.example.paperpersonalizing.entity.papertreeComposite.PaperTreeEntry;
 import com.example.paperpersonalizing.mapper.AlertPaperMapper;
@@ -37,16 +38,26 @@ public class PaperTreeService {
         ResultEntity<?> result=new ResultEntity<>();
 
         List<PaperPo> userPaperPoList=userPaperMapper.getUserPaperByUserId(userId);
-        List<PaperPo> alertPaperPoList=alertPaperMapper.getAlertPaperByUserId(userId);
+        List<PaperPo> alertPaperPoList=alertPaperMapper.getAlertedPaperByUserId(userId);
+        List<PaperPo> alertingPaperPoList=alertPaperMapper.getAlertingPaperByUserId(userId);
         List<PaperPo> paperPoList= new ArrayList<>(userPaperPoList);
         Set<Integer> categoryIdSet=new HashSet<>();
         paperPoList.addAll(alertPaperPoList);
+        paperPoList.addAll(alertingPaperPoList);
+
+        //将处于alerting的paper的id放在一个set里
+        HashSet<Integer> alertingSet=new HashSet<>();
+        for (PaperPo paperPo : alertingPaperPoList) {
+            alertingSet.add(paperPo.getPaperId());
+        }
+
         for (PaperPo paperPo : paperPoList) {
             categoryIdSet.add(paperPo.getCategoryId());
         }
         List<CategoryPo> categoryPoList= usersCategoryAndCategoryMapper.getCategoryByCategoryId(categoryIdSet);
         //paperMap通过paper所属的个人分类进行匹配
         HashMap<Integer,List<PaperPo>> paperMap= new HashMap<>();
+
         for (PaperPo paperPo : paperPoList) {
             if(paperMap.get(paperPo.getCategoryId())==null){
                 List<PaperPo> list=new ArrayList<>();
@@ -68,10 +79,11 @@ public class PaperTreeService {
         }
         String userName=userInfoMapper.getUserNameByUserId(userId);
         // 开始构造paper树的目录结构
-        PaperTree paperTree=buildPaperTreeCategory(userName, map, paperMap);
+        PaperTree paperTree=buildPaperTreeCategory(userName, map, paperMap,alertingSet);
         return result;
     }
-    private PaperTree buildPaperTreeCategory (String userName, HashMap<Integer, List<CategoryPo>> map, HashMap<Integer, List<PaperPo>> paperMap){
+    private PaperTree buildPaperTreeCategory (String userName, HashMap<Integer, List<CategoryPo>> map,
+                                              HashMap<Integer, List<PaperPo>> paperMap,HashSet<Integer> alertingSet){
         // BFS
         Queue<PaperTree> queue=new PriorityQueue<>();
         CategoryBo root=new CategoryBo(userName,null);
@@ -82,8 +94,15 @@ public class PaperTreeService {
             List<CategoryPo> list=map.get(paperTree.getCategoryBo().getId());
             List<PaperPo> paperList=paperMap.get(paperTree.getCategoryBo().getId());
             for (PaperPo paperPo : paperList) {
-                Paper paper=new Paper(new PaperBo(paperPo));
-                paperTree.addPaperTreeEntry(paper);
+                //如果是alert过去但是用户还没确认
+                if(alertingSet.contains(paperPo.getPaperId())){
+                    PaperAlerting paperAlerting=new PaperAlerting(new PaperBo(paperPo));
+                    paperTree.addPaperTreeEntry(paperAlerting);
+                }else{//一般情况
+                    Paper paper=new Paper(new PaperBo(paperPo));
+                    paperTree.addPaperTreeEntry(paper);
+                }
+
             }
             for (CategoryPo categoryPo : list) {
                 PaperTree childPaperTree=new PaperTree(new CategoryBo(categoryPo));
@@ -104,7 +123,6 @@ public class PaperTreeService {
         }catch (IOException e){
             e.printStackTrace();
         }
-
         result.setCode(200);
         return result;
     }

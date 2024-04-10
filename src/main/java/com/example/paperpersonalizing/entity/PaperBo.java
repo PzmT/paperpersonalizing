@@ -3,6 +3,7 @@ package com.example.paperpersonalizing.entity;
 public class PaperBo {
     private int paperId;
     private String paperName;
+    private int categoryId;
     private String doi;
     private String savingPath;
     private String keyword;
@@ -75,6 +76,14 @@ public class PaperBo {
 
     public String getImgPath() {
         return imgPath;
+    }
+
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
     }
 
     public void setImgPath(String imgPath) {
