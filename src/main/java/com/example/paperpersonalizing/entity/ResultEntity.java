@@ -19,4 +19,10 @@ public class ResultEntity<T> {
     public void setCode(int code) {
         this.code = code;
     }
+    public void success(){
+        this.code=200;
+    }
+    public void failure(){
+        this.code=400;
+    }
 }

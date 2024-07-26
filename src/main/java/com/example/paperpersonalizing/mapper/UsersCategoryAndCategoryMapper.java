@@ -21,4 +21,10 @@ public interface UsersCategoryAndCategoryMapper {
             "#{item}" +
             "</foreach>")
     List<CategoryPo> getCategoryByCategoryId(@Param("categoryIds") Set<Integer> categoryId);
+
+    @Select("SELECT id FROM category WHERE category = #{category}")
+    int getCategoryIdByFormalCategoryName(@Param("category")String category);
+
+    @Select("SELECT category FROM category ")
+    List<String> getAllCategoryName();
 }

@@ -34,6 +34,8 @@ public class PaperTreeService {
     private ParseService parseService;
     @Autowired
     private FileStorageService fileStorageService;
+    @Autowired
+    private PaperTreeEntryService paperTreeEntryService;
     public ResultEntity<?> getPaperTree(Integer userId){
         ResultEntity<?> result=new ResultEntity<>();
 
@@ -79,39 +81,10 @@ public class PaperTreeService {
         }
         String userName=userInfoMapper.getUserNameByUserId(userId);
         // 开始构造paper树的目录结构
-        PaperTree paperTree=buildPaperTreeCategory(userName, map, paperMap,alertingSet);
+        PaperTree paperTree=paperTreeEntryService.buildPaperTreeCategory(userName, map, paperMap,alertingSet);
         return result;
     }
-    private PaperTree buildPaperTreeCategory (String userName, HashMap<Integer, List<CategoryPo>> map,
-                                              HashMap<Integer, List<PaperPo>> paperMap,HashSet<Integer> alertingSet){
-        // BFS
-        Queue<PaperTree> queue=new PriorityQueue<>();
-        CategoryBo root=new CategoryBo(userName,null);
-        PaperTree rootPaperTree=new PaperTree(root);
-        queue.offer(rootPaperTree);
-        while (!queue.isEmpty()){
-            PaperTree paperTree=queue.poll();
-            List<CategoryPo> list=map.get(paperTree.getCategoryBo().getId());
-            List<PaperPo> paperList=paperMap.get(paperTree.getCategoryBo().getId());
-            for (PaperPo paperPo : paperList) {
-                //如果是alert过去但是用户还没确认
-                if(alertingSet.contains(paperPo.getPaperId())){
-                    PaperAlerting paperAlerting=new PaperAlerting(new PaperBo(paperPo));
-                    paperTree.addPaperTreeEntry(paperAlerting);
-                }else{//一般情况
-                    Paper paper=new Paper(new PaperBo(paperPo));
-                    paperTree.addPaperTreeEntry(paper);
-                }
 
-            }
-            for (CategoryPo categoryPo : list) {
-                PaperTree childPaperTree=new PaperTree(new CategoryBo(categoryPo));
-                queue.offer(childPaperTree);
-                paperTree.addPaperTreeEntry(childPaperTree);
-            }
-        }
-        return rootPaperTree;
-    }
 
     public ResultEntity<?> initialize(int userId, MultipartFile zip){
         ResultEntity<?> result=new ResultEntity<>();

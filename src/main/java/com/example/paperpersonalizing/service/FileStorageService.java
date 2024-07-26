@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -18,25 +19,35 @@ public class FileStorageService {
     private ParseService parseService;
     @Autowired
     private FileStorageService fileStorageService;
-    public void readUserDirectory(List<File> files){
+    public void readUserDirectory(List<File> files) throws IOException {
         for (File file : files) {
-            if(file.isDirectory()){
+            if (file.isDirectory()) {
                 parseService.parseCategory(file);
-                fileStorageService.readDirectory(file);
-            }else {
+                // 递归处理子目录
+                File[] subFiles = file.listFiles();
+                if (subFiles != null) {
+                    readUserDirectory(Arrays.asList(subFiles));
+                }
+            } else {
                 parseService.parsePaper(file);
             }
         }
     }
-    public void readDirectory(File directory){
-        File[] files=directory.listFiles();
-        for (File file : files) {
-            if(file.isDirectory()){
-                fileStorageService.readDirectory(file );
+
+    public void readDirectory(File directory) throws IOException {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    parseService.parseCategory(file);
+                    // 递归处理子目录
+                    readDirectory(file);
+                } else {
+                    parseService.parsePaper(file);
+                }
             }
         }
     }
-
     public List<File> readZip(MultipartFile zipFile, String rootDirectoryPath) throws IOException {
         File tempDirectory = new File(rootDirectoryPath);
         if (!tempDirectory.mkdir()) {

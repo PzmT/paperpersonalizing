@@ -19,5 +19,9 @@ public interface UserPaperMapper {
             "INNER JOIN user_paper_mapping ON user_paper.paper_id=user_paper_mapping.paper_id" +
             "WHERE user_paper_mapping.user_id=#{userId}")
     List<PaperPo> getUserPaperByUserId(@Param("userId") int userId);
+    @Select("SELECT category_id FROM user_paper"+
+            "INNER JOIN user_paper_mapping ON user_paper.paper_id=user_paper_mapping.paper_id" +
+            "WHERE user_paper_mapping.user_id=#{userId}")
+    List<Integer> getUserCategoryIdByUserId(@Param("userId") int userId);
 
 }

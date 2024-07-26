@@ -1,10 +1,7 @@
 package com.example.paperpersonalizing.mapper;
 
 import com.example.paperpersonalizing.entity.PaperPo;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -21,6 +18,12 @@ public interface AlertPaperMapper {
             "ON paper_to_alert.paper_id=alerting.paper_id" +
             " WHERE alerting.user_id=#{userId}")
     List<PaperPo> getAlertingPaperByUserId(@Param("userId") int userId);
-    @Insert("INSERT INTO alerting (paper_id,user_id) values (#{paperId},#{userId})")
-    int insertAlertingPaper(@Param("paperId") int paperId,@Param("userId")int userId);
+    @Insert("INSERT INTO alerting (paper_id,user_id,category_id) values (#{paperId},#{userId},#{categoryId})")
+    int insertAlertingPaperByUserIdPaperId(@Param("paperId") int paperId,@Param("userId")int userId,@Param("categoryId")int categoryId);
+    @Insert("INSERT INTO paper_alerted_to_user (alerted_paper_id,user_id,category_id) values (#{paperId},#{userId},#{categoryId}) ")
+    int insertAlertedPaperByUserIdPaperIdCategoryId(@Param("paperId") int paperId,@Param("userId")int userId,@Param(("categoryId"))int categoryId);
+    @Insert("INSERT INTO user_not_paper (paper_id,user_id) values (#{paperId},#{userId}) ")
+    int insertNotPaperByUserIdPaperId(@Param("paperId") int paperId,@Param("userId")int userId);
+    @Delete(("DELETE FROM alerting WHERE user_id=#{userId}"))
+    int deleteAlertingPaperByUserId(@Param("userId") int userId);
 }
